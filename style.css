@@ -1,0 +1,844 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    color: #fff;
+    min-height: 100vh;
+}
+
+/* Welcome Page */
+.welcome-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+    padding: 2rem;
+    animation: fadeIn 0.8s ease;
+}
+
+.welcome-title {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #dc143c, #ff4757);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.welcome-subtitle {
+    font-size: 1.5rem;
+    color: #888;
+    margin-bottom: 3rem;
+}
+
+.welcome-page .next-btn {
+    width: auto;
+    padding: 1rem 3rem;
+}
+
+/* Quiz Section */
+.quiz-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #2a2a2a;
+    border-radius: 10px;
+    margin-bottom: 3rem;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #dc143c, #ff4757);
+    width: 20%;
+    transition: width 0.4s ease;
+}
+
+.question-number {
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+}
+
+h1 {
+    font-size: 2.2rem;
+    margin-bottom: 2rem;
+    line-height: 1.3;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.option {
+    background: #1a1a1a;
+    border: 2px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.option:hover {
+    border-color: #dc143c;
+    transform: translateX(5px);
+}
+
+.option.selected {
+    border-color: #dc143c;
+    background: rgba(220, 20, 60, 0.1);
+}
+
+.option-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.option-content p {
+    color: #888;
+    font-size: 0.95rem;
+}
+
+.unit-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 2rem;
+    background: #2a2a2a;
+    border-radius: 25px;
+    padding: 0.3rem;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.unit-btn {
+    background: none;
+    border: none;
+    color: #888;
+    padding: 0.6rem 2rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1rem;
+}
+
+.unit-btn.active {
+    background: #dc143c;
+    color: white;
+}
+
+.input-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.input-field {
+    background: #1a1a1a;
+    border: 2px solid #2a2a2a;
+    color: #fff;
+    padding: 1rem;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    text-align: center;
+    width: 120px;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #dc143c;
+}
+
+.input-label {
+    color: #888;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.next-btn {
+    width: 100%;
+    background: #dc143c;
+    color: white;
+    border: none;
+    padding: 1.2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.next-btn:hover:not(:disabled) {
+    background: #ff4757;
+    transform: translateY(-2px);
+}
+
+.next-btn:disabled {
+    background: #2a2a2a;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Main App */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar Navigation */
+.bottom-nav {
+    width: 250px;
+    background: #1a1a1a;
+    border-right: 1px solid #2a2a2a;
+    padding: 2rem 0;
+    position: fixed;
+    height: 100vh;
+    left: 0;
+    top: 0;
+}
+
+.nav-logo {
+    padding: 0 2rem 2rem;
+    border-bottom: 1px solid #2a2a2a;
+    margin-bottom: 2rem;
+}
+
+.nav-logo h1 {
+    font-size: 1.8rem;
+    background: linear-gradient(135deg, #dc143c, #ff4757);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.3rem;
+}
+
+.nav-logo p {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1rem;
+    padding: 1rem 2rem;
+    width: 100%;
+    text-align: left;
+    border-left: 3px solid transparent;
+}
+
+.nav-btn:hover {
+    background: rgba(220, 20, 60, 0.1);
+    color: #dc143c;
+}
+
+.nav-btn.active {
+    color: #dc143c;
+    background: rgba(220, 20, 60, 0.1);
+    border-left-color: #dc143c;
+}
+
+.nav-icon {
+    font-size: 1.5rem;
+}
+
+/* Main Content */
+.page {
+    display: none;
+    margin-left: 250px;
+    padding: 3rem;
+    width: calc(100% - 250px);
+    animation: fadeIn 0.3s ease;
+}
+
+.page.active {
+    display: block;
+}
+
+.page-header {
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.page-header h2 {
+    font-size: 2.5rem;
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.user-greeting, .date-display, .workout-week {
+    color: #888;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+/* Home Page */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.goal-countdown h3 {
+    color: #dc143c;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+}
+
+.countdown-card {
+    background: linear-gradient(135deg, #dc143c, #8b0000);
+    padding: 3rem;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.countdown-number {
+    font-size: 5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.countdown-label {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+}
+
+.goal-text {
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.weight-tracking {
+    margin-bottom: 3rem;
+}
+
+.weight-tracking h3 {
+    color: #dc143c;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+}
+
+#weightChart {
+    width: 100%;
+    height: 300px;
+    background: #1a1a1a;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    padding: 1rem;
+}
+
+.weight-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.stat-card {
+    background: #1a1a1a;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #2a2a2a;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 1rem;
+}
+
+.change-positive {
+    color: #4CAF50;
+}
+
+.change-negative {
+    color: #ff4757;
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: #888;
+}
+
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.quick-stat-card {
+    background: #1a1a1a;
+    padding: 2rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border: 1px solid #2a2a2a;
+}
+
+.stat-icon {
+    font-size: 3rem;
+}
+
+.quick-stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.quick-stat-label {
+    font-size: 1rem;
+    color: #888;
+}
+
+/* Nutrition Page */
+.nutrition-overview {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 3rem;
+    padding: 3rem;
+    background: #1a1a1a;
+    border-radius: 15px;
+}
+
+.calorie-ring {
+    position: relative;
+    width: 250px;
+    height: 250px;
+}
+
+.calorie-ring svg {
+    transform: rotate(-90deg);
+}
+
+.ring-bg {
+    fill: none;
+    stroke: #2a2a2a;
+    stroke-width: 8;
+}
+
+.ring-progress {
+    fill: none;
+    stroke: #dc143c;
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 70;
+    transition: stroke-dashoffset 0.5s ease;
+}
+
+.ring-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.ring-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #dc143c;
+}
+
+.ring-label {
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.macro-bars {
+    margin-bottom: 3rem;
+    background: #1a1a1a;
+    padding: 2rem;
+    border-radius: 15px;
+}
+
+.macro-item {
+    margin-bottom: 2rem;
+}
+
+.macro-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+}
+
+.macro-bar {
+    height: 12px;
+    background: #2a2a2a;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.macro-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #dc143c, #ff4757);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.add-btn {
+    background: #dc143c;
+    color: white;
+    border: none;
+    padding: 1.2rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-bottom: 3rem;
+}
+
+.add-btn:hover {
+    background: #ff4757;
+}
+
+.food-log h3 {
+    color: #dc143c;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+}
+
+.food-item {
+    background: #1a1a1a;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.food-name {
+    font-weight: 600;
+}
+
+.food-details {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.food-calories {
+    font-weight: bold;
+    color: #dc143c;
+}
+
+/* Workout Page */
+.workout-schedule {
+    margin-bottom: 3rem;
+    display: grid;
+    gap: 1.5rem;
+}
+
+.workout-day {
+    background: #1a1a1a;
+    padding: 2rem;
+    border-radius: 12px;
+    border-left: 4px solid #dc143c;
+    border: 1px solid #2a2a2a;
+}
+
+.workout-day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.day-title {
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+.day-status {
+    font-size: 0.9rem;
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    background: rgba(220, 20, 60, 0.2);
+    color: #dc143c;
+    font-weight: 600;
+}
+
+.day-status.completed {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+}
+
+.exercise-list {
+    list-style: none;
+}
+
+.exercise-list li {
+    padding: 1rem 0;
+    color: #ccc;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 1rem;
+}
+
+.exercise-list li:last-child {
+    border-bottom: none;
+}
+
+.exercise-progress h3 {
+    color: #dc143c;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+}
+
+#exerciseChart {
+    width: 100%;
+    height: 350px;
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: #1a1a1a;
+    border-radius: 15px;
+    padding: 1.5rem;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.search-input {
+    width: 100%;
+    background: #0a0a0a;
+    border: 2px solid #2a2a2a;
+    color: #fff;
+    padding: 1rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.food-suggestions {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.food-suggestion-item {
+    background: #0a0a0a;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.food-suggestion-item:hover {
+    background: #2a2a2a;
+}
+
+.food-input-section {
+    margin-top: 1rem;
+}
+
+.quantity-input {
+    margin: 1rem 0;
+}
+
+.quantity-input label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #888;
+}
+
+.quantity-input input {
+    width: 100%;
+    background: #0a0a0a;
+    border: 2px solid #2a2a2a;
+    color: #fff;
+    padding: 0.8rem;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.nutrition-preview {
+    background: #0a0a0a;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.nutrition-preview div {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.nutrition-preview div:last-child {
+    border-bottom: none;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #4CAF50;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 2000;
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .bottom-nav {
+        width: 200px;
+    }
+    
+    .page {
+        margin-left: 200px;
+        width: calc(100% - 200px);
+        padding: 2rem;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .bottom-nav {
+        width: 100%;
+        height: auto;
+        position: fixed;
+        bottom: 0;
+        top: auto;
+        border-right: none;
+        border-top: 1px solid #2a2a2a;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-around;
+        z-index: 100;
+    }
+    
+    .nav-logo {
+        display: none;
+    }
+    
+    .nav-btn {
+        flex-direction: column;
+        padding: 0.5rem;
+        font-size: 0.85rem;
+        border-left: none;
+    }
+    
+    .page {
+        margin-left: 0;
+        width: 100%;
+        padding: 1.5rem;
+        padding-bottom: 100px;
+    }
+    
+    .page-header h2 {
+        font-size: 2rem;
+    }
+    
+    .welcome-title {
+        font-size: 3rem;
+    }
+    
+    .countdown-number {
+        font-size: 3.5rem;
+    }
+    
+    .weight-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-stats {
+        grid-template-columns: 1fr;
+    }
+}
