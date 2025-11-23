@@ -1,3 +1,162 @@
+// Authentication System
+let currentUser = null;
+
+// Register User
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if user is logged in on page load
+    const loggedInUser = localStorage.getItem('currentUser');
+    if (loggedInUser) {
+        currentUser = loggedInUser;
+        
+        // Check if user has profile
+        const users = JSON.parse(localStorage.getItem('users') || '{}');
+        const userProfileKey = `profile_${loggedInUser}`;
+        const savedProfile = localStorage.getItem(userProfileKey);
+        
+        if (savedProfile && users[loggedInUser]?.hasProfile) {
+            // Load profile and go to dashboard
+            userProfile = JSON.parse(savedProfile);
+            completedWorkouts = parseInt(localStorage.getItem(`workouts_${loggedInUser}`) || '0');
+            
+            document.getElementById('welcomePage').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            initializeApp();
+        } else {
+            // Go to quiz
+            document.getElementById('welcomePage').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+            loadQuestion();
+        }
+    }
+    
+    // Welcome page button - show login
+    const startBtn = document.getElementById('startQuizBtn');
+    if (startBtn) {
+        startBtn.addEventListener('click', function() {
+            const loggedInUser = localStorage.getItem('currentUser');
+            if (loggedInUser) {
+                // Already logged in, go to quiz
+                document.getElementById('welcomePage').style.display = 'none';
+                document.getElementById('quizContainer').style.display = 'block';
+                loadQuestion();
+            } else {
+                // Not logged in, show login page
+                document.getElementById('welcomePage').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'flex';
+            }
+        });
+    }
+    
+    // Register button
+    const registerBtn = document.getElementById('registerBtn');
+    if (registerBtn) {
+        registerBtn.addEventListener('click', function() {
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            // Check if user already exists
+            const users = JSON.parse(localStorage.getItem('users') || '{}');
+            if (users[email]) {
+                alert('Email already registered! Please login.');
+                return;
+            }
+            
+            // Save user
+            users[email] = { 
+                password: password, 
+                createdAt: new Date().toISOString(),
+                hasProfile: false
+            };
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            alert('Registration successful! Please login.');
+            showLogin();
+            document.getElementById('registerForm').reset();
+        });
+    }
+    
+    // Login button
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const users = JSON.parse(localStorage.getItem('users') || '{}');
+            
+            if (!users[email]) {
+                alert('Email not found! Please register.');
+                return;
+            }
+            
+            if (users[email].password !== password) {
+                alert('Incorrect password!');
+                return;
+            }
+            
+            // Login successful
+            currentUser = email;
+            localStorage.setItem('currentUser', email);
+            
+            // Check if user has completed profile
+            const userProfileKey = `profile_${email}`;
+            const savedProfile = localStorage.getItem(userProfileKey);
+            
+            if (savedProfile && users[email].hasProfile) {
+                // Load saved profile and go to dashboard
+                userProfile = JSON.parse(savedProfile);
+                completedWorkouts = parseInt(localStorage.getItem(`workouts_${email}`) || '0');
+                
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+                initializeApp();
+            } else {
+                // Go to quiz
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('quizContainer').style.display = 'block';
+                loadQuestion();
+            }
+            
+            document.getElementById('loginForm').reset();
+        });
+    }
+});
+
+// Show Register Page
+function showRegister() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('registerPage').style.display = 'flex';
+}
+
+// Show Login Page
+function showLogin() {
+    document.getElementById('registerPage').style.display = 'none';
+    document.getElementById('loginPage').style.display = 'flex';
+}
+
+// Toggle password visibility
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    field.type = field.type === 'password' ? 'text' : 'password';
+}
+
+// Toggle register passwords visibility
+function toggleRegisterPasswords() {
+    const pass = document.getElementById('registerPassword');
+    const confirm = document.getElementById('confirmPassword');
+    const newType = pass.type === 'password' ? 'text' : 'password';
+    pass.type = newType;
+    confirm.type = newType;
+}
+
 // Quiz Data
 const questions = [
     {
@@ -93,12 +252,6 @@ let dailyNutrition = {
 };
 
 let foodLog = [];
-
-document.getElementById('startQuizBtn').addEventListener('click', function() {
-    document.getElementById('welcomePage').style.display = 'none';
-    document.getElementById('quizContainer').style.display = 'block';
-    loadQuestion();
-});
 
 function loadQuestion() {
     const q = questions[currentQuestion];
@@ -289,6 +442,17 @@ function showTimeFrameSelection() {
     });
     
     document.getElementById('confirmTimeframe').addEventListener('click', () => {
+        // Save profile to user's storage
+        const userProfileKey = `profile_${currentUser}`;
+        localStorage.setItem(userProfileKey, JSON.stringify(userProfile));
+        
+        // Mark user as having profile
+        const users = JSON.parse(localStorage.getItem('users') || '{}');
+        if (users[currentUser]) {
+            users[currentUser].hasProfile = true;
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+        
         container.style.display = 'none';
         document.getElementById('appContainer').style.display = 'block';
         initializeApp();
@@ -303,6 +467,33 @@ function initializeApp() {
     setupNavigation();
     setupFoodModal();
     document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    
+    // Display user email
+    if (currentUser) {
+        document.getElementById('userEmail').textContent = currentUser;
+    }
+}
+
+// Logout Function
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('currentUser');
+        currentUser = null;
+        
+        // Reset app state
+        document.getElementById('appContainer').style.display = 'none';
+        document.getElementById('quizContainer').style.display = 'none';
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('registerPage').style.display = 'none';
+        
+        // Show welcome page
+        document.getElementById('welcomePage').style.display = 'flex';
+        
+        // Reset quiz
+        currentQuestion = 0;
+        answers = [];
+        userProfile = {};
+    }
 }
 
 function setNutritionTargets() {
@@ -673,6 +864,8 @@ function openWorkoutDetail(dayIndex) {
                     <button class="next-btn" id="finishWorkoutBtn" onclick="finishWorkout()" style="display: none; background: #00c853;">Finish</button>
                 </div>
                 
+                <div id="workoutStatus" style="display: none; text-align: center; margin-bottom: 20px;"></div>
+                
                 <h4 style="margin-bottom: 15px;">Exercises:</h4>
                 <ul class="exercise-list">
                     ${workout.exercises.map(ex => `<li style="margin-bottom: 10px; font-size: 16px;">${ex}</li>`).join('')}
@@ -748,13 +941,21 @@ function finishWorkout() {
     const totalMinutes = Math.floor(workoutElapsedTime / 60000);
     const caloriesBurned = calculateCaloriesBurned(totalMinutes);
     
-    completedWorkouts++;
+    // Check if workout was completed (at least 10 minutes)
+    const isCompleted = totalMinutes >= 10;
+    
+    if (isCompleted) {
+        completedWorkouts++;
+        // Save to user's storage
+        localStorage.setItem(`workouts_${currentUser}`, completedWorkouts.toString());
+    }
+    
     workoutActive = false;
     workoutPaused = false;
     workoutElapsedTime = 0;
     
     closeWorkoutDetail();
-    showWorkoutSummary(totalMinutes, caloriesBurned);
+    showWorkoutSummary(totalMinutes, caloriesBurned, isCompleted);
     updateHomePage();
     
     // Redirect to home dashboard
@@ -777,22 +978,30 @@ function calculateCaloriesBurned(minutes) {
     return Math.round((met * 3.5 * userProfile.currentWeight * minutes) / 200);
 }
 
-function showWorkoutSummary(minutes, calories) {
+function showWorkoutSummary(minutes, calories, isCompleted) {
     const modal = document.createElement('div');
     modal.className = 'modal active';
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Workout Complete! 🎉</h3>
+                <h3>${isCompleted ? 'Workout Complete! 🎉' : 'Workout Incomplete ⚠️'}</h3>
             </div>
             <div style="padding: 20px; text-align: center;">
-                <div style="font-size: 48px; color: #dc143c; margin: 20px 0;">${calories}</div>
-                <div style="font-size: 18px; margin-bottom: 30px;">Calories Burned</div>
-                <div style="font-size: 16px; color: #888;">Duration: ${minutes} minutes</div>
-                <div style="font-size: 16px; color: #888; margin-top: 10px;">
-                    Days Remaining: ${userProfile.timeframeDays - completedWorkouts}
-                </div>
-                <button class="next-btn" style="margin-top: 30px;" onclick="this.parentElement.parentElement.parentElement.remove()">Done</button>
+                ${isCompleted ? `
+                    <div style="font-size: 48px; color: #dc143c; margin: 20px 0;">${calories}</div>
+                    <div style="font-size: 18px; margin-bottom: 30px;">Calories Burned</div>
+                    <div style="font-size: 16px; color: #888;">Duration: ${minutes} minutes</div>
+                    <div style="font-size: 16px; color: #888; margin-top: 10px;">
+                        Days Remaining: ${userProfile.timeframeDays - completedWorkouts}
+                    </div>
+                ` : `
+                    <div style="font-size: 18px; color: #ff6b00; margin: 20px 0;">Workout ended early</div>
+                    <div style="font-size: 16px; color: #888;">Duration: ${minutes} minutes</div>
+                    <div style="font-size: 14px; color: #888; margin-top: 15px;">
+                        Complete at least 10 minutes to mark as done
+                    </div>
+                `}
+                <button class="next-btn" style="margin-top: 30px;" onclick="this.parentElement.parentElement.parentElement.remove()">Close</button>
             </div>
         </div>
     `;

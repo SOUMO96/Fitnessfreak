@@ -14,6 +14,53 @@
         <button class="next-btn" id="startQuizBtn">Let's Start</button>
     </div>
 
+    <!-- Login Page -->
+    <div class="auth-container" id="loginPage" style="display: none;">
+        <div class="auth-card">
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Login to continue your fitness journey</p>
+            <form id="loginForm" onsubmit="return false;">
+                <div class="input-group">
+                    <input type="email" class="input-field" id="loginEmail" placeholder="Email" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" class="input-field" id="loginPassword" placeholder="Password" required>
+                    <label class="show-password">
+                        <input type="checkbox" onclick="togglePassword('loginPassword')">
+                        <span>Show password</span>
+                    </label>
+                </div>
+                <button type="submit" class="next-btn" id="loginBtn">Login</button>
+                <p class="auth-switch">Don't have an account? <span onclick="showRegister()">Register</span></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Page -->
+    <div class="auth-container" id="registerPage" style="display: none;">
+        <div class="auth-card">
+            <h1 class="auth-title">Create Account</h1>
+            <p class="auth-subtitle">Start your fitness journey today</p>
+            <form id="registerForm" onsubmit="return false;">
+                <div class="input-group">
+                    <input type="email" class="input-field" id="registerEmail" placeholder="Email" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" class="input-field" id="registerPassword" placeholder="Password" minlength="6" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" class="input-field" id="confirmPassword" placeholder="Confirm Password" minlength="6" required>
+                    <label class="show-password">
+                        <input type="checkbox" onclick="toggleRegisterPasswords()">
+                        <span>Show passwords</span>
+                    </label>
+                </div>
+                <button type="submit" class="next-btn" id="registerBtn">Register</button>
+                <p class="auth-switch">Already have an account? <span onclick="showLogin()">Login</span></p>
+            </form>
+        </div>
+    </div>
+
     <!-- Quiz Section -->
     <div class="quiz-container" id="quizContainer" style="display: none;">
         <div class="progress-bar" id="progressBar">
@@ -35,6 +82,7 @@
             <div class="nav-logo">
                 <h1>FitTrack</h1>
                 <p>Your Fitness Companion</p>
+                <p style="font-size: 0.85rem; color: #888; margin-top: 0.5rem;" id="userEmail"></p>
             </div>
             <button class="nav-btn active" data-page="home">
                 <span class="nav-icon">🏠</span>
@@ -47,6 +95,10 @@
             <button class="nav-btn" data-page="workout">
                 <span class="nav-icon">💪</span>
                 <span>Workout Plan</span>
+            </button>
+            <button class="nav-btn" onclick="logout()" style="margin-top: auto; border-top: 1px solid #2a2a2a;">
+                <span class="nav-icon">🚪</span>
+                <span>Logout</span>
             </button>
         </nav>
 
