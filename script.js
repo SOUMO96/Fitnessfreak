@@ -1,35 +1,100 @@
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyA31Sx6YYFL3Cv4GEd5er2EY3815KBPe10",
+    authDomain: "fitness-quiz-app.firebaseapp.com",
+    projectId: "fitness-quiz-app",
+    storageBucket: "fitness-quiz-app.firebasestorage.app",
+    messagingSenderId: "851404860310",
+    appId: "1:851404860310:web:3cbbd3367b0da7f5f3cbb7",
+    measurementId: "G-YVNL94CQKZ"
+};
+
+console.log('Script loaded!');
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+console.log('Firebase initialized!');
+
+// Initialize EmailJS
+emailjs.init("oNJqqROZ6n4s_xOFA"); // Your EmailJS public key
+
+// Send verification email
+async function sendVerificationEmail(email, code) {
+    try {
+        const templateParams = {
+            user_email: email,
+            message: code,
+            user_name: email.split('@')[0]
+        };
+        
+        console.log('Sending email with params:', templateParams);
+        
+        const response = await emailjs.send(
+            'service_v3rs3r8',  // Your new EmailJS service ID
+            'template_2wrv74e', // Your EmailJS template ID
+            templateParams
+        );
+        
+        console.log('Email sent successfully:', response);
+        return true;
+    } catch (error) {
+        console.error('Failed to send email:', error);
+        console.error('Error details:', error.text || error.message);
+        return false;
+    }
+}
+
+// Send verification code wrapper
+async function sendVerificationCode(email, code) {
+    const success = await sendVerificationEmail(email, code);
+    if (success) {
+        alert(`Verification code sent to ${email}. Please check your inbox.`);
+    } else {
+        alert(`Demo Mode: Your verification code is ${code}`);
+    }
+    return true;
+}
+
 // Authentication System
 let currentUser = null;
+let verificationCodeSent = '';
+let pendingUserEmail = '';
+let pendingUserPassword = '';
+
+// Generate 6-digit code
+function generateVerificationCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 // Register User
 document.addEventListener('DOMContentLoaded', () => {
     // Check if user is logged in on page load
-    const loggedInUser = localStorage.getItem('currentUser');
-    if (loggedInUser) {
-        currentUser = loggedInUser;
-        
-        // Check if user has profile
-        const users = JSON.parse(localStorage.getItem('users') || '{}');
-        const userProfileKey = `profile_${loggedInUser}`;
-        const savedProfile = localStorage.getItem(userProfileKey);
-        
-        if (savedProfile && users[loggedInUser]?.hasProfile) {
-            // Load profile and go to dashboard
-            userProfile = JSON.parse(savedProfile);
-            completedWorkouts = parseInt(localStorage.getItem(`workouts_${loggedInUser}`) || '0');
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            currentUser = user;
             
+            // Check if user has profile in Firestore
+            const profileDoc = await db.collection('profiles').doc(user.uid).get();
+            
+            if (profileDoc.exists) {
+                // Load profile and go to dashboard
+                userProfile = profileDoc.data();
+                const workoutsDoc = await db.collection('workouts').doc(user.uid).get();
+                completedWorkouts = workoutsDoc.exists ? workoutsDoc.data().count : 0;
+            }
+            
+            // Always go to dashboard after login
             document.getElementById('welcomePage').style.display = 'none';
             document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('registerPage').style.display = 'none';
+            document.getElementById('verificationPage').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
             initializeApp();
-        } else {
-            // Go to quiz
-            document.getElementById('welcomePage').style.display = 'none';
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('quizContainer').style.display = 'block';
-            loadQuestion();
         }
-    }
+    });
     
     // Welcome page button - show login
     const startBtn = document.getElementById('startQuizBtn');
@@ -48,98 +113,111 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
-    // Register button
-    const registerBtn = document.getElementById('registerBtn');
-    if (registerBtn) {
-        registerBtn.addEventListener('click', function() {
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (password !== confirmPassword) {
-                alert('Passwords do not match!');
-                return;
-            }
-            
-            // Check if user already exists
-            const users = JSON.parse(localStorage.getItem('users') || '{}');
-            if (users[email]) {
-                alert('Email already registered! Please login.');
-                return;
-            }
-            
-            // Save user
-            users[email] = { 
-                password: password, 
-                createdAt: new Date().toISOString(),
-                hasProfile: false
-            };
-            localStorage.setItem('users', JSON.stringify(users));
-            
-            alert('Registration successful! Please login.');
-            showLogin();
-            document.getElementById('registerForm').reset();
-        });
-    }
-    
-    // Login button
-    const loginBtn = document.getElementById('loginBtn');
-    if (loginBtn) {
-        loginBtn.addEventListener('click', function() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            const users = JSON.parse(localStorage.getItem('users') || '{}');
-            
-            if (!users[email]) {
-                alert('Email not found! Please register.');
-                return;
-            }
-            
-            if (users[email].password !== password) {
-                alert('Incorrect password!');
-                return;
-            }
-            
-            // Login successful
-            currentUser = email;
-            localStorage.setItem('currentUser', email);
-            
-            // Check if user has completed profile
-            const userProfileKey = `profile_${email}`;
-            const savedProfile = localStorage.getItem(userProfileKey);
-            
-            if (savedProfile && users[email].hasProfile) {
-                // Load saved profile and go to dashboard
-                userProfile = JSON.parse(savedProfile);
-                completedWorkouts = parseInt(localStorage.getItem(`workouts_${email}`) || '0');
-                
-                document.getElementById('loginPage').style.display = 'none';
-                document.getElementById('appContainer').style.display = 'block';
-                initializeApp();
-            } else {
-                // Go to quiz
-                document.getElementById('loginPage').style.display = 'none';
-                document.getElementById('quizContainer').style.display = 'block';
-                loadQuestion();
-            }
-            
-            document.getElementById('loginForm').reset();
-        });
-    }
 });
 
 // Show Register Page
 function showRegister() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('registerPage').style.display = 'flex';
+    document.getElementById('verificationPage').style.display = 'none';
 }
 
 // Show Login Page
 function showLogin() {
     document.getElementById('registerPage').style.display = 'none';
     document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('verificationPage').style.display = 'none';
+}
+
+// Show Verification Page
+function showVerification() {
+    document.getElementById('registerPage').style.display = 'none';
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('verificationPage').style.display = 'flex';
+}
+
+// Handle Login
+async function handleLogin() {
+    console.log('handleLogin called');
+    
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    
+    console.log('Email:', email);
+    console.log('Password length:', password.length);
+    
+    if (!email) {
+        alert('Please enter an email address.');
+        return;
+    }
+    
+    if (!password) {
+        alert('Please enter a password.');
+        return;
+    }
+    
+    try {
+        console.log('Attempting login...');
+        await auth.signInWithEmailAndPassword(email, password);
+        console.log('Login successful!');
+        // onAuthStateChanged will handle navigation to dashboard
+        
+        console.log('Verification code sent to email');
+        
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+    } catch (error) {
+        console.error('Login error:', error);
+        if (error.code === 'auth/user-not-found') {
+            alert('Email not found! Please register.');
+        } else if (error.code === 'auth/wrong-password') {
+            alert('Incorrect password!');
+        } else if (error.code === 'auth/invalid-email') {
+            alert('Invalid email format.');
+        } else {
+            alert('Login failed: ' + error.message);
+        }
+    }
+}
+
+// Handle Register
+async function handleRegister() {
+    console.log('handleRegister called');
+    
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (!email) {
+        alert('Please enter an email address.');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        alert('Passwords do not match!');
+        return;
+    }
+    
+    if (password.length < 6) {
+        alert('Password should be at least 6 characters.');
+        return;
+    }
+    
+    // Store credentials temporarily (don't create account yet)
+    pendingUserEmail = email;
+    pendingUserPassword = password;
+    
+    // Generate and send verification code
+    verificationCodeSent = Math.floor(100000 + Math.random() * 900000).toString();
+    await sendVerificationCode(email, verificationCodeSent);
+    
+    // Show verification page immediately
+    showVerification();
+    
+    // Clear registration form
+    document.getElementById('registerEmail').value = '';
+    document.getElementById('registerPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
 }
 
 // Toggle password visibility
@@ -155,6 +233,61 @@ function toggleRegisterPasswords() {
     const newType = pass.type === 'password' ? 'text' : 'password';
     pass.type = newType;
     confirm.type = newType;
+}
+
+// Verify Code
+async function verifyCode() {
+    const enteredCode = document.getElementById('verificationCode').value.trim();
+    
+    if (!enteredCode) {
+        alert('Please enter the verification code.');
+        return;
+    }
+    
+    if (enteredCode === verificationCodeSent) {
+        // Code is correct - now create the Firebase account
+        try {
+            await auth.createUserWithEmailAndPassword(pendingUserEmail, pendingUserPassword);
+            document.getElementById('verificationMessage').textContent = 'Account created successfully! Welcome! ✅';
+            document.getElementById('verificationMessage').style.color = '#00c853';
+            // onAuthStateChanged will handle navigation to dashboard
+        } catch (error) {
+            console.error('Account creation error:', error);
+            if (error.code === 'auth/email-already-in-use') {
+                alert('Email already registered! Please login.');
+                showLogin();
+            } else {
+                alert('Error creating account: ' + error.message);
+            }
+        }
+    } else {
+        // Code is incorrect
+        document.getElementById('verificationMessage').textContent = 'Incorrect code. Please try again.';
+        document.getElementById('verificationMessage').style.color = '#dc143c';
+        document.getElementById('verificationCode').value = '';
+    }
+}
+
+// Resend Code
+async function resendCode() {
+    // Generate new code
+    verificationCodeSent = generateVerificationCode();
+    
+    // Send new code via email
+    const emailSent = await sendVerificationEmail(pendingUserEmail, verificationCodeSent);
+    
+    if (emailSent) {
+        document.getElementById('verificationMessage').textContent = 'New code sent to your email!';
+        document.getElementById('verificationMessage').style.color = '#00c853';
+    } else {
+        document.getElementById('verificationMessage').textContent = 'Failed to send email. Please try again.';
+        document.getElementById('verificationMessage').style.color = '#dc143c';
+    }
+    
+    console.log('New verification code sent');
+    
+    // Clear input
+    document.getElementById('verificationCode').value = '';
 }
 
 // Quiz Data
@@ -441,21 +574,16 @@ function showTimeFrameSelection() {
         }
     });
     
-    document.getElementById('confirmTimeframe').addEventListener('click', () => {
-        // Save profile to user's storage
-        const userProfileKey = `profile_${currentUser}`;
-        localStorage.setItem(userProfileKey, JSON.stringify(userProfile));
-        
-        // Mark user as having profile
-        const users = JSON.parse(localStorage.getItem('users') || '{}');
-        if (users[currentUser]) {
-            users[currentUser].hasProfile = true;
-            localStorage.setItem('users', JSON.stringify(users));
+    document.getElementById('confirmTimeframe').addEventListener('click', async () => {
+        // Save profile to Firestore
+        try {
+            await db.collection('profiles').doc(currentUser.uid).set(userProfile);
+            container.style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            initializeApp();
+        } catch (error) {
+            alert('Error saving profile: ' + error.message);
         }
-        
-        container.style.display = 'none';
-        document.getElementById('appContainer').style.display = 'block';
-        initializeApp();
     });
 }
 
@@ -470,29 +598,32 @@ function initializeApp() {
     
     // Display user email
     if (currentUser) {
-        document.getElementById('userEmail').textContent = currentUser;
+        document.getElementById('userEmail').textContent = currentUser.email;
     }
 }
 
 // Logout Function
 function logout() {
     if (confirm('Are you sure you want to logout?')) {
-        localStorage.removeItem('currentUser');
-        currentUser = null;
-        
-        // Reset app state
-        document.getElementById('appContainer').style.display = 'none';
-        document.getElementById('quizContainer').style.display = 'none';
-        document.getElementById('loginPage').style.display = 'none';
-        document.getElementById('registerPage').style.display = 'none';
-        
-        // Show welcome page
-        document.getElementById('welcomePage').style.display = 'flex';
-        
-        // Reset quiz
-        currentQuestion = 0;
-        answers = [];
-        userProfile = {};
+        auth.signOut().then(() => {
+            currentUser = null;
+            
+            // Reset app state
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('registerPage').style.display = 'none';
+            
+            // Show welcome page
+            document.getElementById('welcomePage').style.display = 'flex';
+            
+            // Reset quiz
+            currentQuestion = 0;
+            answers = [];
+            userProfile = {};
+        }).catch(error => {
+            alert('Logout failed: ' + error.message);
+        });
     }
 }
 
@@ -946,8 +1077,11 @@ function finishWorkout() {
     
     if (isCompleted) {
         completedWorkouts++;
-        // Save to user's storage
-        localStorage.setItem(`workouts_${currentUser}`, completedWorkouts.toString());
+        // Save to Firestore
+        db.collection('workouts').doc(currentUser.uid).set({
+            count: completedWorkouts,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(error => console.error('Error saving workout:', error));
     }
     
     workoutActive = false;

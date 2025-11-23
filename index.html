@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitTrack - Your Fitness Companion</title>
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
     <!-- Welcome Page -->
@@ -19,20 +27,20 @@
         <div class="auth-card">
             <h1 class="auth-title">Welcome Back</h1>
             <p class="auth-subtitle">Login to continue your fitness journey</p>
-            <form id="loginForm" onsubmit="return false;">
+            <div id="loginForm">
                 <div class="input-group">
-                    <input type="email" class="input-field" id="loginEmail" placeholder="Email" required>
+                    <input type="email" class="input-field" id="loginEmail" placeholder="Email">
                 </div>
                 <div class="input-group">
-                    <input type="password" class="input-field" id="loginPassword" placeholder="Password" required>
+                    <input type="password" class="input-field" id="loginPassword" placeholder="Password">
                     <label class="show-password">
                         <input type="checkbox" onclick="togglePassword('loginPassword')">
                         <span>Show password</span>
                     </label>
                 </div>
-                <button type="submit" class="next-btn" id="loginBtn">Login</button>
+                <button type="button" class="next-btn" id="loginBtn" onclick="handleLogin()">Login</button>
                 <p class="auth-switch">Don't have an account? <span onclick="showRegister()">Register</span></p>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -41,23 +49,39 @@
         <div class="auth-card">
             <h1 class="auth-title">Create Account</h1>
             <p class="auth-subtitle">Start your fitness journey today</p>
-            <form id="registerForm" onsubmit="return false;">
+            <div id="registerForm">
                 <div class="input-group">
-                    <input type="email" class="input-field" id="registerEmail" placeholder="Email" required>
+                    <input type="email" class="input-field" id="registerEmail" placeholder="Email">
                 </div>
                 <div class="input-group">
-                    <input type="password" class="input-field" id="registerPassword" placeholder="Password" minlength="6" required>
+                    <input type="password" class="input-field" id="registerPassword" placeholder="Password" minlength="6">
                 </div>
                 <div class="input-group">
-                    <input type="password" class="input-field" id="confirmPassword" placeholder="Confirm Password" minlength="6" required>
+                    <input type="password" class="input-field" id="confirmPassword" placeholder="Confirm Password" minlength="6">
                     <label class="show-password">
                         <input type="checkbox" onclick="toggleRegisterPasswords()">
                         <span>Show passwords</span>
                     </label>
                 </div>
-                <button type="submit" class="next-btn" id="registerBtn">Register</button>
+                <button type="button" class="next-btn" id="registerBtn" onclick="handleRegister()">Register</button>
                 <p class="auth-switch">Already have an account? <span onclick="showLogin()">Login</span></p>
-            </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Code Page -->
+    <div class="auth-container" id="verificationPage" style="display: none;">
+        <div class="auth-card">
+            <h1 class="auth-title">Verify Email</h1>
+            <p class="auth-subtitle" id="verificationEmail">Enter the 6-digit code sent to your email</p>
+            <div id="verificationForm">
+                <div class="input-group">
+                    <input type="text" class="input-field" id="verificationCode" placeholder="000000" maxlength="6" style="text-align: center; font-size: 2rem; letter-spacing: 0.5rem;">
+                </div>
+                <button type="button" class="next-btn" onclick="verifyCode()">Verify</button>
+                <button type="button" class="next-btn" onclick="resendCode()" style="background: #ff6b00; margin-top: 1rem;">Resend Code</button>
+                <p id="verificationMessage" style="text-align: center; color: #888; margin-top: 1rem; font-size: 0.9rem;"></p>
+            </div>
         </div>
     </div>
 
@@ -269,6 +293,6 @@
 
     <div class="toast" id="toast"></div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=2"></script>
 </body>
 </html>
