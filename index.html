@@ -64,6 +64,9 @@
                         <div class="countdown-number" id="daysRemaining">90</div>
                         <div class="countdown-label">Days Remaining</div>
                         <div class="goal-text" id="goalText">Muscle Gain Program</div>
+                        <div style="margin-top: 15px; font-size: 14px; color: #888;">
+                            <span id="workoutsCompleted">0</span> / <span id="totalDays">90</span> workouts completed
+                        </div>
                     </div>
                 </div>
 
@@ -178,6 +181,18 @@
                 <h2>Workout Plan</h2>
                 <div class="workout-week">Week 1 of 12</div>
             </header>
+
+            <div class="workout-controls">
+                <div id="workoutTimerDisplay" style="display: none; text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 48px; color: #dc143c; font-weight: bold;" id="workoutTimer">00:00</div>
+                    <div style="color: #888; margin-top: 10px;">Workout Duration</div>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 30px;">
+                    <button class="next-btn" id="startWorkoutBtn">Start Workout</button>
+                    <button class="next-btn" id="pauseWorkoutBtn" style="display: none; background: #ff6b00;">Pause</button>
+                    <button class="next-btn" id="finishWorkoutBtn" style="display: none; background: #00c853;">Finish</button>
+                </div>
+            </div>
 
             <div class="workout-schedule" id="workoutSchedule"></div>
 

@@ -65,6 +65,14 @@ let userProfile = {};
 let heightUnit = 'cm';
 let weightUnit = 'kg';
 
+// Workout tracking
+let workoutTimer = null;
+let workoutStartTime = 0;
+let workoutElapsedTime = 0;
+let workoutPaused = false;
+let workoutActive = false;
+let completedWorkouts = 0;
+
 const NUTRITION_API_KEY = 'DEMO_KEY'; // Free API - Get your key at https://fdc.nal.usda.gov/api-key-signup.html
 
 const foodDatabase = [
@@ -248,8 +256,59 @@ function finishQuiz() {
         targetWeight: parseInt(answers[7]) 
     };
     document.getElementById('quizContainer').style.display = 'none';
-    document.getElementById('appContainer').style.display = 'block';
-    initializeApp();
+    showTimeFrameSelection();
+}
+
+function showTimeFrameSelection() {
+    const container = document.getElementById('quizContainer');
+    container.style.display = 'block';
+    container.innerHTML = `
+        <div class="quiz-card">
+            <h2 style="margin-bottom: 30px;">Select Your Goal Timeframe</h2>
+            <div id="optionsContainer">
+                <div class="option" data-value="30">
+                    <div class="option-content">
+                        <h3>30 Days</h3>
+                        <p>Quick results, intense commitment</p>
+                    </div>
+                </div>
+                <div class="option" data-value="60">
+                    <div class="option-content">
+                        <h3>60 Days</h3>
+                        <p>Balanced approach, sustainable</p>
+                    </div>
+                </div>
+                <div class="option" data-value="90">
+                    <div class="option-content">
+                        <h3>90 Days</h3>
+                        <p>Long-term transformation</p>
+                    </div>
+                </div>
+                <div class="option" data-value="120">
+                    <div class="option-content">
+                        <h3>120 Days</h3>
+                        <p>Gradual, lasting change</p>
+                    </div>
+                </div>
+            </div>
+            <button class="next-btn" id="confirmTimeframe" disabled>Continue</button>
+        </div>
+    `;
+    
+    document.querySelectorAll('.option').forEach(opt => {
+        opt.addEventListener('click', function() {
+            document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+            this.classList.add('selected');
+            userProfile.timeframeDays = parseInt(this.dataset.value);
+            document.getElementById('confirmTimeframe').disabled = false;
+        });
+    });
+    
+    document.getElementById('confirmTimeframe').addEventListener('click', () => {
+        container.style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        initializeApp();
+    });
 }
 
 function initializeApp() {
@@ -310,6 +369,12 @@ function updateHomePage() {
     document.getElementById('goalText').textContent = goalNames[userProfile.goal];
     document.getElementById('currentWeight').textContent = userProfile.currentWeight + ' kg';
     document.getElementById('targetWeight').textContent = userProfile.targetWeight + ' kg';
+    
+    const daysRemaining = userProfile.timeframeDays - completedWorkouts;
+    document.getElementById('daysRemaining').textContent = daysRemaining;
+    document.getElementById('totalDays').textContent = userProfile.timeframeDays;
+    document.getElementById('workoutsCompleted').textContent = completedWorkouts;
+    
     drawWeightChart();
 }
 
@@ -617,3 +682,94 @@ function drawExerciseChart() {
         ctx.fillRect(x, y, barWidth, barHeight);
     });
 }
+
+// Workout Timer Functions
+function startWorkout() {
+    if (!workoutActive) {
+        workoutActive = true;
+        workoutStartTime = Date.now() - workoutElapsedTime;
+        workoutTimer = setInterval(updateWorkoutTimer, 1000);
+        document.getElementById('startWorkoutBtn').style.display = 'none';
+        document.getElementById('pauseWorkoutBtn').style.display = 'inline-block';
+        document.getElementById('finishWorkoutBtn').style.display = 'inline-block';
+        document.getElementById('workoutTimerDisplay').style.display = 'block';
+    }
+}
+
+function pauseWorkout() {
+    if (workoutActive && !workoutPaused) {
+        workoutPaused = true;
+        clearInterval(workoutTimer);
+        document.getElementById('pauseWorkoutBtn').textContent = 'Resume';
+    } else if (workoutPaused) {
+        workoutPaused = false;
+        workoutStartTime = Date.now() - workoutElapsedTime;
+        workoutTimer = setInterval(updateWorkoutTimer, 1000);
+        document.getElementById('pauseWorkoutBtn').textContent = 'Pause';
+    }
+}
+
+function finishWorkout() {
+    if (!workoutActive) return;
+    
+    clearInterval(workoutTimer);
+    const totalMinutes = Math.floor(workoutElapsedTime / 60000);
+    const caloriesBurned = calculateCaloriesBurned(totalMinutes);
+    
+    completedWorkouts++;
+    workoutActive = false;
+    workoutPaused = false;
+    workoutElapsedTime = 0;
+    
+    document.getElementById('startWorkoutBtn').style.display = 'inline-block';
+    document.getElementById('pauseWorkoutBtn').style.display = 'none';
+    document.getElementById('finishWorkoutBtn').style.display = 'none';
+    document.getElementById('workoutTimerDisplay').style.display = 'none';
+    
+    showWorkoutSummary(totalMinutes, caloriesBurned);
+    updateHomePage();
+}
+
+function updateWorkoutTimer() {
+    workoutElapsedTime = Date.now() - workoutStartTime;
+    const minutes = Math.floor(workoutElapsedTime / 60000);
+    const seconds = Math.floor((workoutElapsedTime % 60000) / 1000);
+    document.getElementById('workoutTimer').textContent = 
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function calculateCaloriesBurned(minutes) {
+    const met = { muscle: 6, lose: 8, tone: 5, endurance: 7 }[userProfile.goal] || 6;
+    return Math.round((met * 3.5 * userProfile.currentWeight * minutes) / 200);
+}
+
+function showWorkoutSummary(minutes, calories) {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Workout Complete! 🎉</h3>
+            </div>
+            <div style="padding: 20px; text-align: center;">
+                <div style="font-size: 48px; color: #dc143c; margin: 20px 0;">${calories}</div>
+                <div style="font-size: 18px; margin-bottom: 30px;">Calories Burned</div>
+                <div style="font-size: 16px; color: #888;">Duration: ${minutes} minutes</div>
+                <div style="font-size: 16px; color: #888; margin-top: 10px;">
+                    Days Remaining: ${userProfile.timeframeDays - completedWorkouts}
+                </div>
+                <button class="next-btn" style="margin-top: 30px;" onclick="this.parentElement.parentElement.parentElement.remove()">Done</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Setup workout controls
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('startWorkoutBtn')) {
+        document.getElementById('startWorkoutBtn').addEventListener('click', startWorkout);
+        document.getElementById('pauseWorkoutBtn').addEventListener('click', pauseWorkout);
+        document.getElementById('finishWorkoutBtn').addEventListener('click', finishWorkout);
+    }
+});
