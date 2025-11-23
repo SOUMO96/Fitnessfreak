@@ -72,6 +72,7 @@ let workoutElapsedTime = 0;
 let workoutPaused = false;
 let workoutActive = false;
 let completedWorkouts = 0;
+let selectedWorkoutDay = null;
 
 const NUTRITION_API_KEY = 'DEMO_KEY'; // Free API - Get your key at https://fdc.nal.usda.gov/api-key-signup.html
 
@@ -264,44 +265,27 @@ function showTimeFrameSelection() {
     container.style.display = 'block';
     container.innerHTML = `
         <div class="quiz-card">
-            <h2 style="margin-bottom: 30px;">Select Your Goal Timeframe</h2>
-            <div id="optionsContainer">
-                <div class="option" data-value="30">
-                    <div class="option-content">
-                        <h3>30 Days</h3>
-                        <p>Quick results, intense commitment</p>
-                    </div>
-                </div>
-                <div class="option" data-value="60">
-                    <div class="option-content">
-                        <h3>60 Days</h3>
-                        <p>Balanced approach, sustainable</p>
-                    </div>
-                </div>
-                <div class="option" data-value="90">
-                    <div class="option-content">
-                        <h3>90 Days</h3>
-                        <p>Long-term transformation</p>
-                    </div>
-                </div>
-                <div class="option" data-value="120">
-                    <div class="option-content">
-                        <h3>120 Days</h3>
-                        <p>Gradual, lasting change</p>
-                    </div>
+            <h2 style="margin-bottom: 30px;">Enter Your Goal Timeframe</h2>
+            <div class="input-group">
+                <div>
+                    <input type="number" class="input-field" id="monthsInput" placeholder="3" min="1" max="12" style="font-size: 24px; text-align: center;">
+                    <div class="input-label">Number of Months</div>
                 </div>
             </div>
             <button class="next-btn" id="confirmTimeframe" disabled>Continue</button>
         </div>
     `;
     
-    document.querySelectorAll('.option').forEach(opt => {
-        opt.addEventListener('click', function() {
-            document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-            this.classList.add('selected');
-            userProfile.timeframeDays = parseInt(this.dataset.value);
+    const input = document.getElementById('monthsInput');
+    input.addEventListener('input', function() {
+        const months = parseInt(this.value);
+        if (months > 0 && months <= 12) {
+            userProfile.timeframeMonths = months;
+            userProfile.timeframeDays = months * 30;
             document.getElementById('confirmTimeframe').disabled = false;
-        });
+        } else {
+            document.getElementById('confirmTimeframe').disabled = true;
+        }
     });
     
     document.getElementById('confirmTimeframe').addEventListener('click', () => {
@@ -374,6 +358,7 @@ function updateHomePage() {
     document.getElementById('daysRemaining').textContent = daysRemaining;
     document.getElementById('totalDays').textContent = userProfile.timeframeDays;
     document.getElementById('workoutsCompleted').textContent = completedWorkouts;
+    document.getElementById('timeframeMonths').textContent = userProfile.timeframeMonths || Math.round(userProfile.timeframeDays / 30);
     
     drawWeightChart();
 }
@@ -649,8 +634,8 @@ function updateWorkoutPage() {
     };
     
     const schedule = workouts[userProfile.goal];
-    document.getElementById('workoutSchedule').innerHTML = schedule.map(day => `
-        <div class="workout-day">
+    document.getElementById('workoutSchedule').innerHTML = schedule.map((day, index) => `
+        <div class="workout-day" onclick="openWorkoutDetail(${index})" style="cursor: pointer;">
             <div class="workout-day-header">
                 <div class="day-title">${day.day}: ${day.focus}</div>
                 <div class="day-status ${day.status}">${day.status === 'completed' ? '✓ Done' : day.status === 'today' ? 'Today' : 'Upcoming'}</div>
@@ -659,7 +644,54 @@ function updateWorkoutPage() {
         </div>
     `).join('');
     
+    window.workoutScheduleData = schedule;
     drawExerciseChart();
+}
+
+function openWorkoutDetail(dayIndex) {
+    const workout = window.workoutScheduleData[dayIndex];
+    selectedWorkoutDay = workout;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.id = 'workoutDetailModal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>${workout.day}: ${workout.focus}</h3>
+                <button class="close-btn" onclick="closeWorkoutDetail()">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <div id="workoutTimerDisplay" style="display: none; text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 48px; color: #dc143c; font-weight: bold;" id="workoutTimer">00:00</div>
+                    <div style="color: #888; margin-top: 10px;">Workout Duration</div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 30px;">
+                    <button class="next-btn" id="startWorkoutBtn" onclick="startWorkout()">Start Workout</button>
+                    <button class="next-btn" id="pauseWorkoutBtn" onclick="pauseWorkout()" style="display: none; background: #ff6b00;">Pause</button>
+                    <button class="next-btn" id="finishWorkoutBtn" onclick="finishWorkout()" style="display: none; background: #00c853;">Finish</button>
+                </div>
+                
+                <h4 style="margin-bottom: 15px;">Exercises:</h4>
+                <ul class="exercise-list">
+                    ${workout.exercises.map(ex => `<li style="margin-bottom: 10px; font-size: 16px;">${ex}</li>`).join('')}
+                </ul>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function closeWorkoutDetail() {
+    const modal = document.getElementById('workoutDetailModal');
+    if (modal) modal.remove();
+    if (workoutActive) {
+        clearInterval(workoutTimer);
+        workoutActive = false;
+        workoutPaused = false;
+        workoutElapsedTime = 0;
+    }
 }
 
 function drawExerciseChart() {
@@ -721,13 +753,15 @@ function finishWorkout() {
     workoutPaused = false;
     workoutElapsedTime = 0;
     
-    document.getElementById('startWorkoutBtn').style.display = 'inline-block';
-    document.getElementById('pauseWorkoutBtn').style.display = 'none';
-    document.getElementById('finishWorkoutBtn').style.display = 'none';
-    document.getElementById('workoutTimerDisplay').style.display = 'none';
-    
+    closeWorkoutDetail();
     showWorkoutSummary(totalMinutes, caloriesBurned);
     updateHomePage();
+    
+    // Redirect to home dashboard
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.nav-btn[data-page="home"]').classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('homePage').classList.add('active');
 }
 
 function updateWorkoutTimer() {
@@ -764,12 +798,3 @@ function showWorkoutSummary(minutes, calories) {
     `;
     document.body.appendChild(modal);
 }
-
-// Setup workout controls
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('startWorkoutBtn')) {
-        document.getElementById('startWorkoutBtn').addEventListener('click', startWorkout);
-        document.getElementById('pauseWorkoutBtn').addEventListener('click', pauseWorkout);
-        document.getElementById('finishWorkoutBtn').addEventListener('click', finishWorkout);
-    }
-});
