@@ -84,15 +84,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 userProfile = profileDoc.data();
                 const workoutsDoc = await db.collection('workouts').doc(user.uid).get();
                 completedWorkouts = workoutsDoc.exists ? workoutsDoc.data().count : 0;
+                
+                // Go to dashboard
+                document.getElementById('welcomePage').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('registerPage').style.display = 'none';
+                document.getElementById('verificationPage').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+                initializeApp();
+            } else {
+                // New user - show quiz/survey
+                document.getElementById('welcomePage').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('registerPage').style.display = 'none';
+                document.getElementById('verificationPage').style.display = 'none';
+                document.getElementById('quizContainer').style.display = 'block';
+                loadQuestion();
             }
-            
-            // Always go to dashboard after login
-            document.getElementById('welcomePage').style.display = 'none';
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('registerPage').style.display = 'none';
-            document.getElementById('verificationPage').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'block';
-            initializeApp();
         }
     });
     
