@@ -65,6 +65,8 @@ let userProfile = {};
 let heightUnit = 'cm';
 let weightUnit = 'kg';
 
+const NUTRITION_API_KEY = 'DEMO_KEY'; // Free API - Get your key at https://fdc.nal.usda.gov/api-key-signup.html
+
 const foodDatabase = [
     { name: "Chicken Breast", calories: 165, protein: 31, carbs: 0, fats: 3.6, fiber: 0, per: 100 },
     { name: "Brown Rice", calories: 112, protein: 2.6, carbs: 24, fats: 0.9, fiber: 1.8, per: 100 },
@@ -393,26 +395,18 @@ function setupFoodModal() {
         resetFoodModal();
     });
     
+    let searchTimeout;
     searchInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase();
+        const query = this.value.trim();
         if (query.length < 2) {
             document.getElementById('foodSuggestions').innerHTML = '';
             return;
         }
         
-        const results = foodDatabase.filter(food => food.name.toLowerCase().includes(query));
-        document.getElementById('foodSuggestions').innerHTML = results.map(food => `
-            <div class="food-suggestion-item" data-food="${food.name}">
-                <div class="food-name">${food.name}</div>
-                <div class="food-details">${food.calories} kcal per 100g</div>
-            </div>
-        `).join('');
+        clearTimeout(searchTimeout);
+        document.getElementById('foodSuggestions').innerHTML = '<div style="padding: 15px; text-align: center; color: #888;">Searching...</div>';
         
-        document.querySelectorAll('.food-suggestion-item').forEach(item => {
-            item.addEventListener('click', function() {
-                selectFood(this.dataset.food);
-            });
-        });
+        searchTimeout = setTimeout(() => searchFoodAPI(query), 500);
     });
     
     document.getElementById('foodQuantity').addEventListener('input', updateNutritionPreview);
@@ -420,6 +414,76 @@ function setupFoodModal() {
 }
 
 let selectedFood = null;
+
+async function searchFoodAPI(query) {
+    try {
+        const response = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=10&api_key=${NUTRITION_API_KEY}`);
+        const data = await response.json();
+        
+        if (data.foods && data.foods.length > 0) {
+            displayFoodResults(data.foods);
+        } else {
+            document.getElementById('foodSuggestions').innerHTML = '<div style="padding: 15px; text-align: center; color: #888;">No results found</div>';
+        }
+    } catch (error) {
+        console.error('API Error:', error);
+        searchLocalDatabase(query);
+    }
+}
+
+function searchLocalDatabase(query) {
+    const results = foodDatabase.filter(food => food.name.toLowerCase().includes(query.toLowerCase()));
+    if (results.length > 0) {
+        const foods = results.map(food => ({
+            description: food.name,
+            foodNutrients: [
+                { nutrientName: 'Energy', value: food.calories },
+                { nutrientName: 'Protein', value: food.protein },
+                { nutrientName: 'Carbohydrate, by difference', value: food.carbs },
+                { nutrientName: 'Total lipid (fat)', value: food.fats },
+                { nutrientName: 'Fiber, total dietary', value: food.fiber }
+            ]
+        }));
+        displayFoodResults(foods);
+    } else {
+        document.getElementById('foodSuggestions').innerHTML = '<div style="padding: 15px; text-align: center; color: #888;">No results found</div>';
+    }
+}
+
+function displayFoodResults(foods) {
+    const html = foods.map((food, index) => {
+        const calories = food.foodNutrients.find(n => n.nutrientName === 'Energy')?.value || 0;
+        return `
+            <div class="food-suggestion-item" data-index="${index}">
+                <div class="food-name">${food.description}</div>
+                <div class="food-details">${Math.round(calories)} kcal per 100g</div>
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('foodSuggestions').innerHTML = html;
+    
+    document.querySelectorAll('.food-suggestion-item').forEach((item, index) => {
+        item.addEventListener('click', () => selectFoodFromAPI(foods[index]));
+    });
+}
+
+function selectFoodFromAPI(food) {
+    const nutrients = food.foodNutrients;
+    selectedFood = {
+        name: food.description,
+        calories: nutrients.find(n => n.nutrientName === 'Energy')?.value || 0,
+        protein: nutrients.find(n => n.nutrientName === 'Protein')?.value || 0,
+        carbs: nutrients.find(n => n.nutrientName === 'Carbohydrate, by difference')?.value || 0,
+        fats: nutrients.find(n => n.nutrientName === 'Total lipid (fat)')?.value || 0,
+        fiber: nutrients.find(n => n.nutrientName === 'Fiber, total dietary')?.value || 0
+    };
+    
+    document.getElementById('foodSuggestions').style.display = 'none';
+    document.getElementById('foodInputSection').style.display = 'block';
+    document.getElementById('selectedFoodName').textContent = selectedFood.name;
+    updateNutritionPreview();
+}
 
 function selectFood(foodName) {
     selectedFood = foodDatabase.find(f => f.name === foodName);
