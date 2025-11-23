@@ -1,3 +1,16 @@
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Logs
 *.log
-node_modules/
+
+# Temporary files
+*.tmp
