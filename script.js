@@ -628,6 +628,10 @@ function logout() {
         auth.signOut().then(() => {
             currentUser = null;
             
+            // Reset nutrition data
+            dailyNutrition = { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0, target: { calories: 2500, protein: 150, carbs: 300, fats: 70, fiber: 25 } };
+            foodLog = [];
+            
             // Reset app state
             document.getElementById('appContainer').style.display = 'none';
             document.getElementById('quizContainer').style.display = 'none';
@@ -927,14 +931,23 @@ function addFoodToLog() {
 }
 
 function saveNutritionData() {
-    localStorage.setItem('dailyNutrition', JSON.stringify(dailyNutrition));
-    localStorage.setItem('foodLog', JSON.stringify(foodLog));
+    if (!currentUser) return;
+    localStorage.setItem(`dailyNutrition_${currentUser.uid}`, JSON.stringify(dailyNutrition));
+    localStorage.setItem(`foodLog_${currentUser.uid}`, JSON.stringify(foodLog));
 }
 
 function loadNutritionData() {
-    const saved = localStorage.getItem('dailyNutrition');
-    const savedLog = localStorage.getItem('foodLog');
-    if (saved) dailyNutrition = JSON.parse(saved);
+    if (!currentUser) return;
+    const saved = localStorage.getItem(`dailyNutrition_${currentUser.uid}`);
+    const savedLog = localStorage.getItem(`foodLog_${currentUser.uid}`);
+    if (saved) {
+        const loadedData = JSON.parse(saved);
+        dailyNutrition.calories = loadedData.calories || 0;
+        dailyNutrition.protein = loadedData.protein || 0;
+        dailyNutrition.carbs = loadedData.carbs || 0;
+        dailyNutrition.fats = loadedData.fats || 0;
+        dailyNutrition.fiber = loadedData.fiber || 0;
+    }
     if (savedLog) foodLog = JSON.parse(savedLog);
 }
 
