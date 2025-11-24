@@ -23,26 +23,37 @@ emailjs.init("oNJqqROZ6n4s_xOFA"); // Your EmailJS public key
 
 // Send verification email
 async function sendVerificationEmail(email, code) {
+    console.log('=== EMAIL DEBUG ===');
+    console.log('Email parameter received:', email);
+    console.log('Email type:', typeof email);
+    console.log('Code:', code);
+    
     try {
         const templateParams = {
-            user_email: email,
-            message: code,
-            user_name: email.split('@')[0]
+            to_name: email,
+            to_email: email,
+            user_name: email.split('@')[0],
+            message: `Your verification code is: ${code}`,
+            verification_code: code
         };
         
-        console.log('Sending email with params:', templateParams);
+        console.log('Template params being sent:', JSON.stringify(templateParams));
         
         const response = await emailjs.send(
-            'service_v3rs3r8',  // Your new EmailJS service ID
-            'template_2wrv74e', // Your EmailJS template ID
+            'service_5hd0vzt',
+            'template_cczc71a',
             templateParams
         );
         
         console.log('Email sent successfully:', response);
+        alert(`Verification code sent to ${email}`);
         return true;
     } catch (error) {
-        console.error('Failed to send email:', error);
-        console.error('Error details:', error.text || error.message);
+        console.error('EmailJS Error:', error);
+        console.error('Error status:', error.status);
+        console.error('Error text:', error.text);
+        console.log('Demo mode - CODE:', code);
+        alert(`Demo Mode: Your verification code is ${code}`);
         return false;
     }
 }
@@ -596,6 +607,7 @@ function showTimeFrameSelection() {
 }
 
 function initializeApp() {
+    loadNutritionData();
     setNutritionTargets();
     updateHomePage();
     updateNutritionPage();
@@ -907,10 +919,23 @@ function addFoodToLog() {
     dailyNutrition.fats += foodEntry.fats;
     dailyNutrition.fiber += foodEntry.fiber;
     
+    saveNutritionData();
     updateNutritionDisplay();
     document.getElementById('addFoodModal').classList.remove('active');
     resetFoodModal();
     showToast('Food added successfully!');
+}
+
+function saveNutritionData() {
+    localStorage.setItem('dailyNutrition', JSON.stringify(dailyNutrition));
+    localStorage.setItem('foodLog', JSON.stringify(foodLog));
+}
+
+function loadNutritionData() {
+    const saved = localStorage.getItem('dailyNutrition');
+    const savedLog = localStorage.getItem('foodLog');
+    if (saved) dailyNutrition = JSON.parse(saved);
+    if (savedLog) foodLog = JSON.parse(savedLog);
 }
 
 function resetFoodModal() {
